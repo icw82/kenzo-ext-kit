@@ -1,6 +1,7 @@
-._*
-*.nex
-/build/
-/node_modules/
+.vscode
 
+._*
+/build
+/node_modules
 package-lock.json
+pnpm-lock.yaml

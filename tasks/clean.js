@@ -1,13 +1,14 @@
-'use strict';
+import del from 'del';
 
-const gulp = require('gulp');
-const path = require('path');
-const task_name = path.basename(__filename, '.js');
 
-const del = require('del');
+const paths = [
+    'build/**/*',
+];
 
-const task = done => del([
-    'build/**/*'
-], done);
+const clean = () => del(paths);
+// const clean = done => del(paths, done);
 
-gulp.task(task_name, task);
+
+export {
+    clean,
+};

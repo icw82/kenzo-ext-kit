@@ -1,44 +1,101 @@
-'use strict';
+import { resolve, relative, join } from 'path';
+import { parallel, series, src, dest, watch } from 'gulp';
+import replace from 'gulp-replace';
+import debug from 'gulp-debug';
+import rename from 'gulp-rename';
+import changed from 'gulp-changed';
+import { default as chalk } from 'chalk';
+// import { default as ind } from 'indent-string';
 
-const gulp = require('gulp');
-const path = require('path');
-const task_name = path.basename(__filename, '.js');
-const info = require('./../package.json');
+import * as info from './../../package.json';
+// import { rename } from 'fs';
 
-const replace = require('gulp-replace');
 
-const base = './sources/immutable/';
-const glob_text = [
-    '**/*.html',
-    '**/*.css',
-    '**/*.js',
-    '**/*.json',
-    '**/*.html'
-].map(item => base + item);
+const base = './immutable/';
+const destination = 'build';
+const globs = {
+    // TODO: Автоматические распознавание текстовых файлов
+    text: [
+        '**/*.html',
+        '**/*.css',
+        '**/*.js',
+        '**/*.json',
+        '**/*.html',
+    ].map(item => base + item),
+};
 
-const glob_rest = glob_text.map(item => '!' + item);
-glob_rest.push(base + '**/*.*');
+// Остальные не текстовые файлы.
+globs.rest = globs.text.map(item => '!' + item);
+globs.rest.push(base + '**/*.*');
 
-gulp.task(task_name + ':text', () => gulp
-    .src(glob_text)
+const text = () => src(globs.text)
     .pipe(replace(/::version::/g, info.version))
-    .pipe(gulp.dest('build'))
+    .pipe(replace(/::author::/g, info.author))
+    .pipe(debug({title: 'immutable → '}))
+    .pipe(dest(destination));
+
+const rest = () => src(globs.rest)
+    .pipe(dest(destination));
+
+const immutable = parallel(
+    text,
+    rest,
 );
 
-gulp.task(task_name + ':rest', () => gulp
-    .src(glob_rest)
-    .pipe(gulp.dest('build'))
+// FIXME: не работает вотчер
+
+const watchLog = (file, event) => {
+    console.log(`File ${ chalk.blue(file) } was ${ event }`);
+};
+
+const transfer = path => src(path)
+    .pipe(rename(path => {
+        path.dirname = relative(base, path.dirname);
+    }))
+    .pipe(replace(/::version::/g, info.version))
+    .pipe(replace(/::author::/g, info.author))
+    .pipe(dest(destination));
+
+const textWatch = async () => {
+    // const watcher =
+    watch(globs.text, text);
+
+    // TODO: Удаление в Clear
+
+    // watcher.on('change', path => {
+    //     watchLog(path, 'changed');
+    //     transfer(path);
+    // });
+    // watcher.on('add', path => {
+    //     watchLog(path, 'added');
+    //     transfer(path);
+    // });
+    // watcher.on('unlink', path => {
+    //     watchLog(path, 'removed');
+    // //     [...settings.targets].forEach(item => {
+    // //         const dest = join(
+    // //             settings.resources,
+    // //             relative(item, path)
+    // //         );
+
+    // //         if (is.link(dest)) {
+    // //             readlink(dest, (error, linkString) => {
+    // //                 if (!is.file(linkString)) {
+    // //                     unlink(dest);
+    // //                 }
+    // //             });
+    // //         }
+    // //     });
+    // });
+};
+
+const immutableWatch = parallel(
+    textWatch,
+    // restWatch,
 );
 
-gulp.task(task_name, gulp.parallel(
-    task_name + ':text',
-    task_name + ':rest'
-));
 
-gulp.task('watch:' + task_name, () => gulp
-    .watch([base + '**/*.*'], [task_name])
-);
-
-gulp.task('watch:' + task_name, () => gulp.watch([
-    base + '**/*.*'
-], gulp.task(task_name)));
+export {
+    immutable,
+    immutableWatch,
+};

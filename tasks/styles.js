@@ -1,70 +1,61 @@
-'use strict';
+import { resolve, relative, join } from 'path';
+import { parallel, series, src, dest, watch } from 'gulp';
+import less from 'gulp-less';
+import chalk from 'chalk';
+import del from 'del';
 
-const gulp = require('gulp');
-const path = require('path');
-const task_name = path.basename(__filename, '.js');
-//const info = require('./../package.json');
+import { sources, destination } from '../paths';
 
-const streamqueue = require('streamqueue');
-//const insert = require('gulp-insert');
-const concat = require('gulp-concat');
-const strip = require('gulp-strip-comments');
-//const csso = require('gulp-csso');
-//const rename = require('gulp-rename');
-//const replace = require('gulp-replace');
 
-const ext = '.css';
-const glob = [
-    'styles',
-    'modules/*/styles',
-    'modules/*/submodules/*/styles'
-].map(item => './sources/ext/' + item);
+const globToSync = [
+    './sources/**/*.less',
+];
 
-const task = (() => {
-    const subtasks = [];
+const compile = () => src(globToSync)
+    .pipe(less())
+    .pipe(dest(destination));
 
-    {
-        const subtask_name = task_name + ':reset';
-        subtasks.push(subtask_name);
+const styles = series(
+    compile,
+);
 
-        gulp.task(subtask_name, () => gulp
-            .src('./node_modules/kenzo-kit/kk-reset.css')
-            .pipe(gulp.dest('build/styles'))
-        );
-    }
+const stylesWatch = async() => {
+    const watcher = watch(globToSync);
 
-    const modes = [{
-        name: 'common',
-        postfix: ''
-    }, {
-        name: '2016',
-        postfix: '.2016'
-    }, {
-        name: 'mobile',
-        postfix: '.m'
-    }];
+    watcher.on('change', path => {
+        const file = chalk.blue(path);
+        const event = chalk.blue('changed');
 
-    for (let mode of modes) {
-        const subtask_name = task_name + ':' + mode.name;
-        subtasks.push(subtask_name);
+        console.log(`File ${ file } has been ${ event }`);
+    });
 
-        gulp.task(subtask_name, () => gulp
-            .src(
-                glob.map(item => item + mode.postfix + ext),
-                { allowEmpty: true }
-            )
-            .pipe(concat('ext' + mode.postfix + '.css'))
-            .pipe(strip.text())
-            .pipe(gulp.dest('build/styles'))
-        );
-    }
+    watcher.on('add', path => {
+        const file = chalk.greenBright(path);
+        const event = chalk.greenBright('added');
 
-    return gulp.parallel(...subtasks);
-})();
+        console.log(`File ${ file } has been ${ event }`);
+    });
 
-gulp.task(task_name, task);
+    watcher.on('unlink', path => {
+        const file = chalk.redBright(path);
+        const event = chalk.redBright('removed');
 
-gulp.task('watch:' + task_name, () => gulp.watch([
-    './sources/ext/*' + ext,
-    './sources/ext/**/*' + ext
-], gulp.task(task_name)));
+        console.log(`File ${ file } has been ${ event }`);
+    });
+
+    watcher.on('change', parallel(styles));
+    watcher.on('add', parallel(styles));
+    watcher.on('unlink', path => {
+        const abs = resolve(path.replace(/.less$/, '.css'));
+        const rel = relative(sources, abs);
+        const dest = join(destination, rel);
+
+        return del(dest);
+    });
+};
+
+
+export {
+    styles,
+    stylesWatch,
+};
