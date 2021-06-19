@@ -1,13 +1,13 @@
 import { resolve, relative, join } from 'path';
 import { parallel, series, src, dest, watch } from 'gulp';
-import replace from 'gulp-replace';
-import debug from 'gulp-debug';
-import rename from 'gulp-rename';
-import changed from 'gulp-changed';
-import { default as chalk } from 'chalk';
+import replace = require('gulp-replace');
+import * as debug from 'gulp-debug';
+import * as rename from 'gulp-rename';
+import * as changed from 'gulp-changed';
+import * as chalk from 'chalk';
 // import { default as ind } from 'indent-string';
 
-import * as info from './../../package.json';
+import * as info from '../../package.json';
 // import { rename } from 'fs';
 
 
@@ -21,11 +21,14 @@ const globs = {
         '**/*.js',
         '**/*.json',
         '**/*.html',
-    ].map(item => base + item),
-};
+    ].map((item: string) => base + item),
+} as { [keys: string]: string[] };
+
+globs.text.push('./web-ext-kit/immutable/background.js');
+globs.text.push('./web-ext-kit/immutable/content-script.js');
 
 // Остальные не текстовые файлы.
-globs.rest = globs.text.map(item => '!' + item);
+globs.rest = globs.text.map((item: string) => '!' + item);
 globs.rest.push(base + '**/*.*');
 
 const text = () => src(globs.text)

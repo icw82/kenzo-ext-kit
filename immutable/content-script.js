@@ -1,5 +1,10 @@
 (async () => {
-    const path = chrome.extension.getURL('main.js');
+    const path = chrome.runtime.getURL('main.js');
     const { main } = await import(path);
-    main('content-script');
+
+    try {
+        main('content-script');
+    } catch (error) {
+        console.error(error);
+    }
 })();

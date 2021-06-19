@@ -9,7 +9,7 @@ const build = series(
     parallel(
         scripts,
         styles,
-    )
+    ),
 );
 
 const buildWatch = parallel(

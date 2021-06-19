@@ -1,5 +1,7 @@
-(async () => {
-    const path = chrome.extension.getURL('main.js');
-    const { main } = await import(path);
+import { main } from './main.js';
+
+try {
     main('background');
-})();
+} catch (error) {
+    console.error(error);
+}

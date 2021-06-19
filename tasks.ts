@@ -1,9 +1,9 @@
 import { series, parallel } from 'gulp';
 
-import { clean } from './clean';
-import { immutable, immutableWatch } from './immutable';
-import { scripts, scriptsWatch } from './scripts';
-import { styles, stylesWatch } from './styles';
+import { clean } from './tasks/clean';
+import { immutable, immutableWatch } from './tasks/immutable';
+import { scripts, scriptsWatch } from './tasks/scripts';
+import { styles, stylesWatch } from './tasks/styles';
 
 
 const build = series(
