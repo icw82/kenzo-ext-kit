@@ -1,4 +1,4 @@
-(async () => {
+const init =  async () => {
     const path = chrome.runtime.getURL('main.js');
     const { main } = await import(path);
 
@@ -7,4 +7,6 @@
     } catch (error) {
         console.error(error);
     }
-})();
+}
+
+init();
